@@ -1,0 +1,163 @@
+menu Bluetooth
+
+
+config BT_ENABLED
+    bool "Bluetooth"
+    help
+        Select this option to enable Bluetooth and show the submenu with Bluetooth configuration choices.
+
+choice BTDM_CONTROLLER_PINNED_TO_CORE_CHOICE
+    prompt "The cpu core which bluetooth controller run"
+    depends on BT_ENABLED && !FREERTOS_UNICORE
+    help
+        Specify the cpu core to run bluetooth controller.
+        Can not specify no-affinity.
+
+config BTDM_CONTROLLER_PINNED_TO_CORE_0
+    bool "Core 0 (PRO CPU)"
+config BTDM_CONTROLLER_PINNED_TO_CORE_1
+    bool "Core 1 (APP CPU)"
+    depends on !FREERTOS_UNICORE
+endchoice
+
+config BTDM_CONTROLLER_PINNED_TO_CORE
+    int
+    default 0 if BTDM_CONTROLLER_PINNED_TO_CORE_0
+    default 1 if BTDM_CONTROLLER_PINNED_TO_CORE_1
+    default 0
+
+choice BTDM_CONTROLLER_HCI_MODE_CHOICE
+    prompt "HCI mode"
+    depends on BT_ENABLED
+    help
+        Speicify HCI mode as VHCI or UART(H4)
+
+config BTDM_CONTROLLER_HCI_MODE_VHCI
+    bool "VHCI"
+    help 
+        Normal option. Mostly, choose this VHCI when bluetooth host run on ESP32, too.
+
+config BTDM_CONTROLLER_HCI_MODE_UART_H4
+    bool "UART(H4)"
+    help
+        If use external bluetooth host which run on other hardware and use UART as the HCI interface,
+        choose this option.
+endchoice
+
+menu "HCI UART(H4) Options"
+    visible if BTDM_CONTROLLER_HCI_MODE_UART_H4
+
+config BT_HCI_UART_NO
+    int "UART Number for HCI"
+    depends on BTDM_CONTROLLER_HCI_MODE_UART_H4
+    range 1 2
+    default 1
+    help
+        Uart number for HCI. The available uart is UART1 and UART2.
+
+config BT_HCI_UART_BAUDRATE
+    int "UART Baudrate for HCI"
+    depends on BTDM_CONTROLLER_HCI_MODE_UART_H4
+    range 115200 921600
+    default 921600
+    help
+        UART Baudrate for HCI. Please use standard baudrate.
+endmenu
+
+menuconfig BLUEDROID_ENABLED
+    bool "Bluedroid Enable"
+    depends on BTDM_CONTROLLER_HCI_MODE_VHCI
+    default y
+    help
+        This enables the default Bluedroid Bluetooth stack
+
+choice BLUEDROID_PINNED_TO_CORE_CHOICE
+    prompt "The cpu core which Bluedroid run"
+    depends on BLUEDROID_ENABLED && !FREERTOS_UNICORE
+    help
+        Which the cpu core to run Bluedroid. Can choose core0 and core1.
+        Can not specify no-affinity.
+
+config BLUEDROID_PINNED_TO_CORE_0
+    bool "Core 0 (PRO CPU)"
+config BLUEDROID_PINNED_TO_CORE_1
+    bool "Core 1 (APP CPU)"
+    depends on !FREERTOS_UNICORE
+endchoice
+
+config BLUEDROID_PINNED_TO_CORE
+    int
+    depends on BLUEDROID_ENABLED
+    default 0 if BLUEDROID_PINNED_TO_CORE_0
+    default 1 if BLUEDROID_PINNED_TO_CORE_1
+    default 0
+
+config BTC_TASK_STACK_SIZE
+    int "Bluetooth event (callback to application) task stack size"
+    depends on BLUEDROID_ENABLED
+    default 3072
+    help
+        This select btc task stack size
+
+config BLUEDROID_MEM_DEBUG
+    bool "Bluedroid memory debug"
+    depends on BLUEDROID_ENABLED
+    default n
+    help
+        Bluedroid memory debug
+
+config CLASSIC_BT_ENABLED
+    bool "Classic Bluetooth"
+    depends on BLUEDROID_ENABLED
+    default n
+    help
+        For now this option needs "SMP_ENABLE" to be set to yes
+
+config GATTS_ENABLE
+    bool "Include GATT server module(GATTS)"
+    depends on BLUEDROID_ENABLED
+    default y 
+    help
+        This option can be disabled when the app work only on gatt client mode
+
+config GATTC_ENABLE
+    bool "Include GATT client module(GATTC)"
+    depends on BLUEDROID_ENABLED
+    default y
+    help
+        This option can be close when the app work only on gatt server mode
+
+config BLE_SMP_ENABLE
+   bool "Include BLE security module(SMP)"
+   depends on BLUEDROID_ENABLED
+   default y
+   help
+       This option can be close when the app not used the ble security connect.
+
+config BT_STACK_NO_LOG
+    bool "Close the bluedroid bt stack log print"
+    depends on BLUEDROID_ENABLED
+    default n
+    help
+        This select can save the rodata code size
+
+config BT_ACL_CONNECTIONS
+    int "BT/BLE MAX ACL CONNECTIONS(1~7)"
+    depends on BLUEDROID_ENABLED
+    range 1 7
+    default 4
+    help 
+        Maximum BT/BLE connection count
+
+config SMP_ENABLE
+   bool
+   depends on BLUEDROID_ENABLED
+   default CLASSIC_BT_ENABLED || BLE_SMP_ENABLE
+   
+# Memory reserved at start of DRAM for Bluetooth stack
+config BT_RESERVE_DRAM
+    hex
+    default 0x10000 if BT_ENABLED
+    default 0
+
+endmenu
