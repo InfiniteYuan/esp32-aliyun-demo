@@ -18,9 +18,9 @@
 
 #define TAG "OTA-MQTT"
 #define ota_mqtt_example CONFIG_OTA_MQTT_EXAMPLE
-#define PRODUCT_KEY             "a1WXnhRpAVs"
-#define DEVICE_NAME             "No.1"
-#define DEVICE_SECRET           "d0WQMmSiz6rGk0S4XgD9FzHOLf9fBnqA"
+#define PRODUCT_KEY             "*********************"
+#define DEVICE_NAME             "*********************"
+#define DEVICE_SECRET           "*********************"
 
 /* These are pre-defined topics */
 #define TOPIC_UPDATE            "/"PRODUCT_KEY"/"DEVICE_NAME"/update"
